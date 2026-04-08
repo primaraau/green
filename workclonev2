@@ -1,0 +1,795 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkClone Workshop</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; color: #1a1a1a; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  .deck { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .slide { display: none; flex: 1; flex-direction: column; padding: 20px 48px 36px; overflow-y: auto; }
+  .slide.active { display: flex; }
+
+  .slide-meta { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: #aaa; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .stag { border: 0.5px solid #ddd; border-radius: 4px; padding: 3px 8px; color: #999; background: #fff; }
+  .stag.blue { border-color: #85B7EB; color: #185FA5; background: #E6F1FB; }
+  .stag.green { border-color: #97C459; color: #3B6D11; background: #EAF3DE; }
+  .stag.amber { border-color: #EF9F27; color: #854F0B; background: #FAEEDA; }
+  .stag.teal { border-color: #5DCAA5; color: #0F6E56; background: #E1F5EE; }
+  .stag.purple { border-color: #AFA9EC; color: #534AB7; background: #EEEDFE; }
+
+  h2 { font-size: 24px; font-weight: 500; color: #1a1a1a; margin-bottom: 6px; flex-shrink: 0; }
+  .subtitle { font-size: 13px; color: #888; line-height: 1.6; margin-bottom: 18px; flex-shrink: 0; max-width: 680px; }
+
+  .cols { display: grid; gap: 14px; }
+  .c2 { grid-template-columns: 1fr 1fr; }
+  .c3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card { background: #fff; border: 0.5px solid #e8e6e0; border-radius: 10px; padding: 14px 16px; }
+  .card.blue { border-color: #85B7EB; background: #f0f6fd; }
+  .card.green { border-color: #97C459; background: #f3f9ea; }
+  .card.amber { border-color: #EF9F27; background: #fef8ee; }
+  .card.teal { border-color: #5DCAA5; background: #edf9f4; }
+  .card.purple { border-color: #AFA9EC; background: #f3f2fe; }
+  .card.red { border-color: #F09595; background: #fdf0f0; }
+  .card.hero { border-color: #185FA5; background: #E6F1FB; border-width: 1px; }
+
+  .clabel { font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; color: #bbb; margin-bottom: 4px; }
+  .card.blue .clabel { color: #85B7EB; }
+  .card.green .clabel { color: #97C459; }
+  .card.amber .clabel { color: #EF9F27; }
+  .card.teal .clabel { color: #5DCAA5; }
+  .card.purple .clabel { color: #AFA9EC; }
+  .card.hero .clabel { color: #85B7EB; }
+
+  .cval { font-size: 22px; font-weight: 500; color: #1a1a1a; }
+  .cnote { font-size: 11px; color: #aaa; margin-top: 3px; line-height: 1.5; }
+  .card.blue .cnote { color: #85B7EB; }
+  .card.green .cnote { color: #97C459; }
+  .card.amber .cnote { color: #EF9F27; }
+  .card.red .cnote { color: #E24B4A; }
+
+  ul.il { list-style: none; }
+  ul.il li { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 0.5px solid #f0ede8; font-size: 12px; color: #666; line-height: 1.5; }
+  ul.il li:last-child { border-bottom: none; }
+  ul.il li .d { width: 4px; height: 4px; border-radius: 50%; background: #ccc; margin-top: 6px; flex-shrink: 0; }
+  ul.il li strong { color: #333; font-weight: 500; }
+
+  .ql { list-style: none; }
+  .ql li { padding: 8px 12px; background: #fff; border: 0.5px solid #e8e6e0; border-radius: 6px; margin-bottom: 6px; font-size: 12px; color: #777; line-height: 1.5; }
+  .ql li .qn { font-size: 10px; color: #ccc; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ql li strong { color: #333; font-weight: 500; }
+
+  table.dt { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.dt th { text-align: left; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: #bbb; padding: 0 10px 8px 0; border-bottom: 0.5px solid #e8e6e0; }
+  table.dt td { padding: 7px 10px 7px 0; color: #777; border-bottom: 0.5px solid #f0ede8; vertical-align: top; line-height: 1.5; font-size: 12px; }
+  table.dt td:first-child { color: #333; font-weight: 500; white-space: nowrap; }
+  table.dt tr:last-child td { border-bottom: none; }
+
+  .lb { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 500; }
+  .lb-p { background: #E6F1FB; color: #185FA5; border: 0.5px solid #85B7EB; }
+  .lb-e { background: #EAF3DE; color: #3B6D11; border: 0.5px solid #97C459; }
+
+  .ph { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .phbox { border: 1.5px dashed #d8d5ce; border-radius: 12px; padding: 36px 48px; text-align: center; max-width: 480px; }
+  .phbox .phtitle { font-size: 18px; font-weight: 500; color: #ccc; margin-bottom: 8px; }
+  .phbox p { font-size: 13px; color: #aaa; line-height: 1.6; }
+
+  .tl-item { display: flex; gap: 14px; padding: 11px 0; border-bottom: 0.5px solid #f0ede8; }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-period { font-size: 11px; color: #aaa; min-width: 88px; padding-top: 2px; line-height: 1.5; }
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: #ddd; margin-top: 4px; flex-shrink: 0; }
+  .tl-dot.blue { background: #378ADD; }
+  .tl-dot.green { background: #639922; }
+  .tl-dot.amber { background: #BA7517; }
+  .tl-dot.teal { background: #1D9E75; }
+  .tl-content h3 { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 3px; }
+  .tl-content p { font-size: 12px; color: #888; line-height: 1.5; }
+
+  .speed-card { border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; }
+  .speed-card.plat { background: #E6F1FB; border: 1px solid #85B7EB; }
+  .speed-card.expr { background: #EAF3DE; border: 1px solid #97C459; }
+  .speed-title { font-size: 15px; font-weight: 500; margin-bottom: 12px; }
+  .speed-card.plat .speed-title { color: #185FA5; }
+  .speed-card.expr .speed-title { color: #3B6D11; }
+  .sr { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.06); font-size: 12px; }
+  .sr:last-child { border-bottom: none; }
+  .sr .sl { color: #aaa; }
+  .speed-card.plat .sl { color: #85B7EB; }
+  .speed-card.expr .sl { color: #97C459; }
+  .sr .sv { color: #333; text-align: right; font-size: 12px; }
+  .speed-rule { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(0,0,0,0.08); font-size: 11px; line-height: 1.6; }
+  .speed-card.plat .speed-rule { color: #185FA5; }
+  .speed-card.expr .speed-rule { color: #3B6D11; }
+
+  .pod-card { border-radius: 8px; padding: 12px 14px; border: 0.5px solid #e8e6e0; background: #fff; margin-bottom: 8px; }
+  .pod-card:last-child { margin-bottom: 0; }
+  .pod-name { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 2px; }
+  .pod-role { font-size: 11px; color: #aaa; margin-bottom: 8px; }
+  .pod-owns span { display: block; font-size: 11px; color: #888; padding: 2px 0; line-height: 1.5; }
+  .pod-owns span.no { color: #E24B4A; }
+  .pod-owns span.ask { color: #BA7517; }
+
+  .big-q { padding: 12px 0; border-bottom: 0.5px solid #f0ede8; }
+  .big-q:last-child { border-bottom: none; }
+  .big-q .bq-num { font-size: 10px; color: #ccc; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .big-q .bq-title { font-size: 15px; font-weight: 500; color: #333; margin-bottom: 4px; }
+  .big-q .bq-body { font-size: 12px; color: #888; line-height: 1.6; }
+  .bq-tools { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .tool-pill { font-size: 11px; background: #f5f4f0; border: 0.5px solid #ddd; border-radius: 4px; padding: 2px 8px; color: #666; }
+
+  .hero-block { background: #fff; border: 1px solid #85B7EB; border-radius: 12px; padding: 20px 22px; }
+  .hero-title { font-size: 18px; font-weight: 500; color: #185FA5; margin-bottom: 6px; }
+  .hero-sub { font-size: 12px; color: #85B7EB; margin-bottom: 14px; }
+
+  .res-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid #f0ede8; align-items: center; }
+  .res-row:last-child { border-bottom: none; }
+  .res-name { font-size: 13px; font-weight: 500; color: #333; min-width: 160px; }
+  .res-role { font-size: 11px; color: #aaa; flex: 1; }
+  .res-salary { font-size: 13px; font-weight: 500; color: #185FA5; min-width: 70px; text-align: right; }
+  .res-badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; border: 0.5px solid; flex-shrink: 0; }
+
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 10px 48px 10px; border-bottom: 0.5px solid #e8e6e0; background: #f5f4f0; flex-shrink: 0; }
+  .nav-buttons { display: flex; gap: 8px; }
+  .nav button { background: #fff; border: 0.5px solid #ddd; color: #888; font-size: 12px; padding: 5px 12px; border-radius: 5px; cursor: pointer; }
+  .nav button:hover:not(:disabled) { background: #eee; color: #333; }
+  .nav button:disabled { opacity: 0.3; cursor: default; }
+  .nav-dots { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: 300px; }
+  .nav-dots span { width: 5px; height: 5px; border-radius: 50%; background: #ddd; cursor: pointer; }
+  .nav-dots span.active { background: #888; }
+  .nav-prog { font-size: 11px; color: #bbb; }
+
+  .p-badge { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 500; margin-right: 3px; }
+  .p-plat { background: #E6F1FB; color: #185FA5; }
+  .p-lite { background: #EAF3DE; color: #3B6D11; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-buttons">
+    <button id="prevBtn" onclick="go(-1)" disabled>← Prev</button>
+    <button id="nextBtn" onclick="go(1)">Next →</button>
+  </div>
+  <div class="nav-dots" id="dots"></div>
+  <div class="nav-prog" id="prog">1 / 14</div>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- 1. COVER -->
+<div class="slide active" id="slide-1">
+  <div class="slide-meta"><span class="stag">WorkClone · April 2026 · Confidential</span></div>
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; max-width:620px;">
+    <div style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#bbb; margin-bottom:16px;">Leadership Workshop</div>
+    <h2 style="font-size:36px; line-height:1.1; margin-bottom:12px; color:#1a1a1a;">Two speeds,<br>one product company</h2>
+    <div style="font-size:15px; color:#888; line-height:1.7; margin-bottom:32px;">How WorkClone launches a fast Express lane while protecting the enterprise platform — and what it means for the team, the pipeline, and the next 90 days.</div>
+    <div style="display:flex; gap:28px; flex-wrap:wrap;">
+      <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#bbb; margin-bottom:3px;">Participants</div><div style="font-size:13px; color:#666;">Nat · Jeff · Robert (facilitator)</div></div>
+      <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#bbb; margin-bottom:3px;">Duration</div><div style="font-size:13px; color:#666;">3 hours</div></div>
+      <div><div style="font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:#bbb; margin-bottom:3px;">Format</div><div style="font-size:13px; color:#666;">Decision + planning session</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. OBJECTIVES -->
+<div class="slide" id="slide-2">
+  <div class="slide-meta"><span class="stag">Setup</span></div>
+  <h2>What we need to leave here with</h2>
+  <div class="subtitle">We're not here to debate whether to launch Express. We're here to decide how, who owns it, and what the next 90 days look like with revenue attached. The session runs in this order:</div>
+  <div class="cols c2" style="flex:1; gap:16px;">
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px; padding-bottom:6px; border-bottom:0.5px solid #e8e6e0;">Session flow</div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#185FA5; min-width:70px;">0:00–0:40</div>
+        <div class="tl-dot blue"></div>
+        <div class="tl-content"><h3>Platform + two-speed model</h3><p>What we're building, what each lane is, and the rules that govern each.</p></div>
+      </div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#3B6D11; min-width:70px;">0:40–1:20</div>
+        <div class="tl-dot green"></div>
+        <div class="tl-content"><h3>Pod structure + hiring</h3><p>Who owns what, the AI-native builder role, team visibility tools, and hiring order.</p></div>
+      </div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#555; min-width:70px;">1:20–1:30</div>
+        <div class="tl-dot"></div>
+        <div class="tl-content"><h3>Break</h3><p></p></div>
+      </div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#854F0B; min-width:70px;">1:30–2:10</div>
+        <div class="tl-dot amber"></div>
+        <div class="tl-content"><h3>Technical architecture</h3><p>Control plane, isolation question, and questions for Oli.</p></div>
+      </div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#0F6E56; min-width:70px;">2:10–2:50</div>
+        <div class="tl-dot teal"></div>
+        <div class="tl-content"><h3>Revenue roadmap + pipeline</h3><p>P&L walkthrough, pipeline triage, 90-day milestones with revenue attached.</p></div>
+      </div>
+      <div class="tl-item" style="padding:10px 0;">
+        <div class="tl-period" style="color:#534AB7; min-width:70px;">2:50–3:00</div>
+        <div class="tl-dot" style="background:#AFA9EC;"></div>
+        <div class="tl-content"><h3>Decisions + actions</h3><p>Robert reads back every decision. Owner and date on every action.</p></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px; padding-bottom:6px; border-bottom:0.5px solid #e8e6e0;">What we decide today</div>
+      <div class="card blue" style="margin-bottom:8px;">
+        <div class="clabel">Model + lanes</div>
+        <ul class="il">
+          <li><span class="d"></span>Express vs Platform rules confirmed</li>
+          <li><span class="d"></span>Lite vs Platform comparison agreed</li>
+          <li><span class="d"></span>Broker lite opportunity scoped</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-bottom:8px;">
+        <div class="clabel">Team + hiring</div>
+        <ul class="il">
+          <li><span class="d"></span>AI-native builder role scoped, hiring started</li>
+          <li><span class="d"></span>Developer hire — Platform or Express? Hire or contractor?</li>
+          <li><span class="d"></span>Team visibility tool chosen</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <div class="clabel">Revenue + roadmap</div>
+        <ul class="il">
+          <li><span class="d"></span>Every opportunity assigned to a lane</li>
+          <li><span class="d"></span>90-day milestones with revenue gates</li>
+          <li><span class="d"></span>Board communication plan set</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. OUR OWN PLATFORM — HERO SLIDE -->
+<div class="slide" id="slide-3">
+  <div class="slide-meta"><span class="stag blue">Platform pod</span> The thing we're building</div>
+  <h2>WorkClone's own platform</h2>
+  <div class="subtitle">WorkClone is not an AI tool vendor. We are a platform company. The platform is what makes clones scalable, secure, auditable, and sellable at enterprise prices — and it raises four questions about how we build and run it.</div>
+  <div class="cols c2" style="flex:1; align-items:start; gap:18px;">
+    <div>
+      <div class="hero-block" style="margin-bottom:14px;">
+        <div class="hero-title">What "our own platform" means</div>
+        <div class="hero-sub">The infrastructure WorkClone owns, controls, and compounds value on</div>
+        <ul class="il">
+          <li><span class="d" style="background:#85B7EB;"></span><span><strong>One system of record.</strong> Every clone's identity, memory, conversation history, prompt versions, knowledge base, compliance guardrails, and audit trail lives in WorkClone's own data layer — not inside any third-party tool.</span></li>
+          <li><span class="d" style="background:#85B7EB;"></span><span><strong>Multi-tenant by design.</strong> Each client's data is fully isolated from every other client. Security, compliance, and auditability are architecture — not add-ons.</span></li>
+          <li><span class="d" style="background:#85B7EB;"></span><span><strong>Providers are replaceable.</strong> Voice, workflow, and AI providers sit beneath our platform and can be swapped without WorkClone losing its IP, its client relationships, or its data.</span></li>
+          <li><span class="d" style="background:#85B7EB;"></span><span><strong>Validated in production.</strong> The platform has been cleared by an ASX-listed, regulated enterprise client — a standard that is hard to earn and directly blocks competitors.</span></li>
+        </ul>
+      </div>
+      <div class="card" style="font-size:12px; color:#888; line-height:1.6;">
+        <strong style="color:#333; display:block; margin-bottom:4px;">Express and the platform — related but distinct</strong>
+        Express deployments don't run on our enterprise platform directly — they use their own isolated infrastructure. But they draw on the same IP: our ways of working, prompt frameworks, vertical templates, and accumulated clone-building knowledge. The platform is the gold standard; Express is built with the same thinking, applied faster.
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px;">Four questions for the team to answer</div>
+      <div class="big-q">
+        <div class="bq-num">Q1</div>
+        <div class="bq-title">Are we AI aliens?</div>
+        <div class="bq-body">Are we genuinely using AI to build faster, better, and differently — or are we building the way we always have, just talking about AI more? What does AI-native actually look like in practice for our team?</div>
+      </div>
+      <div class="big-q">
+        <div class="bq-num">Q2</div>
+        <div class="bq-title">How do we become them?</div>
+        <div class="bq-body">What would it look like if the platform pod operated as a truly AI-native team? What changes in tools, habits, how code is written, reviewed, and shipped?</div>
+      </div>
+      <div class="big-q">
+        <div class="bq-num">Q3</div>
+        <div class="bq-title">What AI coding tools are we using?</div>
+        <div class="bq-body">Are we getting the leverage we should from these tools — and is the whole team using them consistently?</div>
+        <div class="bq-tools">
+          <span class="tool-pill">Claude Code</span>
+          <span class="tool-pill">Cursor</span>
+          <span class="tool-pill">GitHub Copilot</span>
+          <span class="tool-pill">v0</span>
+          <span class="tool-pill">Lovable</span>
+        </div>
+      </div>
+      <div class="big-q">
+        <div class="bq-num">Q4</div>
+        <div class="bq-title">How does the whole team get platform visibility?</div>
+        <div class="bq-body">Not to micromanage — but the team currently has limited visibility on what's been built, what's in progress, and what's blocked. What tool gives a clear, living picture without creating a reporting burden?</div>
+        <div class="bq-tools">
+          <span class="tool-pill">Linear</span>
+          <span class="tool-pill">Notion</span>
+          <span class="tool-pill">GitHub Projects</span>
+          <span class="tool-pill">Loom async updates</span>
+          <span class="tool-pill">Plane</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. TWO LANES -->
+<div class="slide" id="slide-4">
+  <div class="slide-meta"><span class="stag blue">Session 1</span> The model</div>
+  <h2>What each lane actually is</h2>
+  <div class="subtitle">Two fundamentally different delivery motions, client profiles, and team responsibilities — with clear rules for each.</div>
+  <div class="cols c2" style="flex:1;">
+    <div class="speed-card expr">
+      <div class="speed-title">WorkClone Express</div>
+      <div class="sr"><span class="sl">What it is</span><span class="sv">Fast proof-of-value deployment</span></div>
+      <div class="sr"><span class="sl">Client profile</span><span class="sv">Mid-market, willing to move fast</span></div>
+      <div class="sr"><span class="sl">Pricing</span><span class="sv">$5K–$12K MRR, no upfront</span></div>
+      <div class="sr"><span class="sl">Timeline</span><span class="sv">10–14 days to go-live</span></div>
+      <div class="sr"><span class="sl">Delivered by</span><span class="sv">Express pod — AI-native builder</span></div>
+      <div class="sr"><span class="sl">Built from</span><span class="sv">Reusable vertical templates</span></div>
+      <div class="sr"><span class="sl">Goal</span><span class="sv">Prove ROI, earn trust, expand</span></div>
+      <div class="sr"><span class="sl">Expansion path</span><span class="sv">60%+ convert to Platform</span></div>
+      <div class="speed-rule">
+        <strong style="color:#3B6D11;">Rules:</strong> Curated templates only. $5K MRR floor — no lower. No custom integrations in Express phase. WorkClone operators supervise; clients do not freely build. Desktop bridge only for legacy systems with no API, in isolated environments.
+      </div>
+    </div>
+    <div class="speed-card plat">
+      <div class="speed-title">WorkClone Platform</div>
+      <div class="sr"><span class="sl">What it is</span><span class="sv">Deep enterprise integration</span></div>
+      <div class="sr"><span class="sl">Client profile</span><span class="sv">Regulated, compliance-heavy enterprise</span></div>
+      <div class="sr"><span class="sl">Pricing</span><span class="sv">$15K–$100K+ MRR</span></div>
+      <div class="sr"><span class="sl">Timeline</span><span class="sv">4–10 weeks</span></div>
+      <div class="sr"><span class="sl">Delivered by</span><span class="sv">Platform pod — Oli + Pete</span></div>
+      <div class="sr"><span class="sl">Built on</span><span class="sv">Multi-tenant platform, compliance layer</span></div>
+      <div class="sr"><span class="sl">Goal</span><span class="sv">Long-term sticky enterprise revenue</span></div>
+      <div class="sr"><span class="sl">Entry</span><span class="sv">May begin with Express Phase 1</span></div>
+      <div class="speed-rule">
+        <strong style="color:#185FA5;">Rules:</strong> Full multi-tenancy and audit trail for every client. Platform pod not pulled into Express delivery. Every enterprise build surfaces reusable components back into the shared template library.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. POD STRUCTURE -->
+<div class="slide" id="slide-5">
+  <div class="slide-meta"><span class="stag green">Session 2</span> Team structure</div>
+  <h2>Two pods, one company</h2>
+  <div class="subtitle">Distinct KPIs, clear ownership, one weekly handoff. The pod structure stops Express from consuming the platform team.</div>
+  <div class="cols c2" style="flex:1; gap:20px;">
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#3B6D11; margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid #97C459;">Express pod</div>
+      <div class="pod-card" style="border-color:#97C459; background:#f3f9ea;">
+        <div class="pod-name">AI-native builder <span style="font-size:11px; font-weight:400; color:#3B6D11;">(hire — pod lead)</span></div>
+        <div class="pod-role">Express delivery engine — the most important hire right now</div>
+        <div class="pod-owns">
+          <span>— Phase 1 clone builds and prompt engineering</span>
+          <span>— Template configuration and client onboarding</span>
+          <span>— UAT, fast shipping, feeds learnings back to platform</span>
+        </div>
+      </div>
+      <div class="pod-card">
+        <div class="pod-name">Nat <span style="font-size:11px; font-weight:400; color:#aaa;">(CEO — commercial lead)</span></div>
+        <div class="pod-role">Lane triage + top client conversations</div>
+        <div class="pod-owns">
+          <span>— Pricing, packaging, pipeline triage</span>
+          <span>— Express prioritisation and weekly operating cadence</span>
+          <span class="no">— Must not become the person building clones manually</span>
+        </div>
+      </div>
+      <div class="pod-card">
+        <div class="pod-name">Jeff <span style="font-size:11px; font-weight:400; color:#aaa;">(strategic)</span></div>
+        <div class="pod-role">BD engine + investor relationships</div>
+        <div class="pod-owns">
+          <span>— Pipeline development and flagship deal shaping</span>
+          <span>— Investor relationships and raise preparation</span>
+          <span class="no">— Not in delivery execution</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#185FA5; margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid #85B7EB;">Platform pod</div>
+      <div class="pod-card" style="border-color:#85B7EB; background:#f0f6fd;">
+        <div class="pod-name">Oli <span style="font-size:11px; font-weight:400; color:#185FA5;">(CTO — pod lead)</span></div>
+        <div class="pod-role">Architecture, security, enterprise integrity</div>
+        <div class="pod-owns">
+          <span>— Multi-tenant platform, auditability, security posture</span>
+          <span>— Shared control plane standards and UAT harness</span>
+          <span>— Reusable connector library</span>
+          <span class="no">— Not pulled into one-off Express builds</span>
+        </div>
+      </div>
+      <div class="pod-card">
+        <div class="pod-name">Pete <span style="font-size:11px; font-weight:400; color:#aaa;">(integrations)</span></div>
+        <div class="pod-role">Enterprise client integrations</div>
+        <div class="pod-owns">
+          <span>— Enterprise client integrations and connectors</span>
+          <span>— Reusable connector library (multi-client value)</span>
+          <span class="no">— Not ad-hoc implementation for every Express deal</span>
+        </div>
+      </div>
+      <div class="pod-card" style="border-color:#EF9F27; background:#fef8ee;">
+        <div class="pod-name">Developer hire <span style="font-size:11px; font-weight:400; color:#aaa;">(planned · ~$180K)</span></div>
+        <div class="pod-role">Role to be decided in this session</div>
+        <div class="pod-owns">
+          <span class="ask">— Platform support, or Express portal sprint?</span>
+          <span class="ask">— Permanent hire or contractor for Wks 3–6?</span>
+          <span class="ask">— Scope and start date to be confirmed today</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6. RESOURCE + HIRING -->
+<div class="slide" id="slide-6">
+  <div class="slide-meta"><span class="stag green">Session 2</span> Resource + hiring</div>
+  <h2>The resource question</h2>
+  <div class="subtitle">~$1.2M opening cash. Every hire shifts the runway. The AI-native builder is the non-negotiable first hire — the rest needs to be decided here with a revenue trigger attached.</div>
+  <div class="cols c2" style="flex:1; gap:18px;">
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px;">Salary + cost commitment</div>
+      <div class="card" style="margin-bottom:10px;">
+        <div class="res-row"><span class="res-name">Nat (CEO)</span><span class="res-role">Commercial lead</span><span class="res-salary">$250K</span></div>
+        <div class="res-row"><span class="res-name">Oli (CTO)</span><span class="res-role">Platform pod lead</span><span class="res-salary">$250K</span></div>
+        <div class="res-row"><span class="res-name">Pete</span><span class="res-role">Integrations</span><span class="res-salary">$200K</span></div>
+        <div class="res-row" style="background:#f3f9ea; border-radius:6px; padding:8px 6px; margin: 4px -6px;">
+          <span class="res-name" style="color:#3B6D11;">AI-native builder</span>
+          <span class="res-role" style="color:#97C459;">Express pod lead — hire now</span>
+          <span class="res-salary" style="color:#3B6D11;">~$150K</span>
+        </div>
+        <div class="res-row" style="background:#fef8ee; border-radius:6px; padding:8px 6px; margin: 4px -6px;">
+          <span class="res-name" style="color:#854F0B;">Developer hire</span>
+          <span class="res-role" style="color:#BA7517;">Platform or portal — TBD</span>
+          <span class="res-salary" style="color:#854F0B;">~$180K</span>
+        </div>
+        <div style="border-top:0.5px solid #f0ede8; margin-top:10px; padding-top:10px;">
+          <div style="font-size:11px; color:#bbb; margin-bottom:6px;">Operating costs</div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:#aaa; padding:3px 0;">Platform hosting<span style="color:#666;">$10K/mo</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:#aaa; padding:3px 0;">Rent<span style="color:#666;">$5K/mo</span></div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; color:#aaa; padding:3px 0;">Other<span style="color:#666;">$10K/mo</span></div>
+        </div>
+      </div>
+      <div class="cols c2" style="gap:8px;">
+        <div class="card blue"><div class="clabel">Monthly burn</div><div class="cval">~$112K</div><div class="cnote">fully staffed incl. ops</div></div>
+        <div class="card green"><div class="clabel">Breakeven MRR</div><div class="cval">Mth 10</div><div class="cnote">$217.5K target</div></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px;">The AI-native builder role — what are we actually hiring?</div>
+      <div class="card green" style="margin-bottom:10px;">
+        <div style="font-size:13px; font-weight:500; color:#3B6D11; margin-bottom:8px;">This is not a traditional developer hire</div>
+        <ul class="il">
+          <li><span class="d" style="background:#97C459;"></span>Prompt engineer who can build end-to-end clone workflows</li>
+          <li><span class="d" style="background:#97C459;"></span>Comfortable with ElevenLabs, n8n, LLM APIs, basic scripting</li>
+          <li><span class="d" style="background:#97C459;"></span>Product thinker — can own client onboarding and UAT</li>
+          <li><span class="d" style="background:#97C459;"></span>Ships fast, documents what's reusable, feeds back to Oli</li>
+          <li><span class="d" style="background:#97C459;"></span>Does not need to build the platform — needs to use it well</li>
+        </ul>
+      </div>
+      <ul class="ql">
+        <li><div class="qn">Q1</div><strong>Is the planned developer hire Platform support or Express portal sprint?</strong> These may need to be two separate roles — which comes first?</li>
+        <li><div class="qn">Q2</div><strong>Hire vs contractor for the portal sprint (weeks 3–6)?</strong> A short-term contractor preserves runway without permanent headcount.</li>
+        <li><div class="qn">Q3</div><strong>What's the revenue trigger for each future hire?</strong> Attach a MRR number to the hiring decision so it's earned, not anticipated.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 6B. LITE VS PLATFORM COMPARISON -->
+<div class="slide" id="slide-6b">
+  <div class="slide-meta"><span class="stag blue">Session 1</span> Lane comparison</div>
+  <h2>Express lite vs Platform — what you actually get</h2>
+  <div class="subtitle">Use this to triage clients and set expectations. The lane shapes the product, the team, and the commercial relationship.</div>
+  <div style="flex:1; overflow-x:auto;">
+  <table style="width:100%; border-collapse:collapse; font-size:12px;">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px 12px 10px 0; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; border-bottom:1px solid #e8e6e0; width:220px;">Feature</th>
+        <th style="padding:8px 16px 10px; text-align:center; font-size:12px; font-weight:500; color:#3B6D11; background:#f3f9ea; border-radius:8px 8px 0 0; border-bottom:1px solid #97C459; width:180px;">Express lite</th>
+        <th style="padding:8px 16px 10px; text-align:center; font-size:12px; font-weight:500; color:#185FA5; background:#f0f6fd; border-radius:8px 8px 0 0; border-bottom:1px solid #85B7EB; width:180px;">WorkClone Platform</th>
+      </tr>
+    </thead>
+    <tbody id="compare-tbody">
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- 6C. BROKER LITE OPPORTUNITY -->
+<div class="slide" id="slide-6c">
+  <div class="slide-meta"><span class="stag green">Opportunity</span> New channel</div>
+  <h2>Broker lite — a new distribution model</h2>
+  <div class="subtitle">A clone-out-of-the-box offering for brokers, scoped with Roberto's initial discussions. Target: 18,000 brokers. Still being shaped — this slide captures the opportunity and what we need to resolve.</div>
+  <div class="cols c2" style="flex:1; align-items:start; gap:18px;">
+    <div>
+      <div class="card green" style="margin-bottom:12px;">
+        <div class="clabel">The opportunity</div>
+        <div style="font-size:15px; font-weight:500; color:#3B6D11; margin-bottom:8px;">18,000 brokers · clone out of the box</div>
+        <div style="font-size:12px; color:#666; line-height:1.7;">Brokers are a natural fit for a pre-built, fast-to-deploy clone — they operate independently, have repeatable workflows, and face the same compliance and client communication challenges. A lite product designed specifically for this channel could unlock a distribution model that doesn't require direct sales effort at scale.</div>
+      </div>
+      <div class="card" style="margin-bottom:12px;">
+        <div class="clabel">Why this is different from standard Express</div>
+        <ul class="il">
+          <li><span class="d" style="background:#97C459;"></span><span><strong>Channel model.</strong> WorkClone doesn't sell to 18,000 brokers directly — we sell once, through an aggregator, association, or platform partner.</span></li>
+          <li><span class="d" style="background:#97C459;"></span><span><strong>Standardised product.</strong> The broker clone is the same for every broker — minimal configuration, fast activation, consistent output.</span></li>
+          <li><span class="d" style="background:#97C459;"></span><span><strong>Lower touch, higher volume.</strong> Lower per-client MRR but compounding at scale without proportional headcount increase.</span></li>
+          <li><span class="d" style="background:#97C459;"></span><span><strong>WorkClone IP advantage.</strong> Our vertical template library and ways of working make this buildable without starting from scratch.</span></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px;">What we need to resolve</div>
+      <ul class="ql" style="margin-bottom:14px;">
+        <li><div class="qn">Scoping</div><strong>What does the broker clone actually do?</strong> Email triage, compliance comms, client follow-up? Regroup with Roberto to define the use case precisely.</li>
+        <li><div class="qn">Channel</div><strong>Who is the distribution partner?</strong> Aggregator, industry association, software platform, or direct? Roberto's initial discussions to clarify.</li>
+        <li><div class="qn">Pricing</div><strong>What is the right per-broker price point?</strong> Low enough for mass uptake, high enough to be meaningful at volume. What does $X × 1,000 brokers look like vs $Y × 18,000?</li>
+        <li><div class="qn">Infrastructure</div><strong>Can this run on Express isolated infrastructure at broker scale?</strong> Or does it need its own model?</li>
+        <li><div class="qn">Timeline</div><strong>When does this enter the roadmap?</strong> Is it a Year 1 opportunity or a Year 2 channel play once Express templates are proven?</li>
+      </ul>
+      <div class="card amber">
+        <div class="clabel">Status</div>
+        <div style="font-size:13px; color:#854F0B; font-weight:500; margin-bottom:4px;">Early scoping — Roberto discussions ongoing</div>
+        <div style="font-size:12px; color:#888; line-height:1.6;">Not in current P&L model. Will be added once channel partner and pricing are confirmed. Regroup with Roberto before next board touchpoint.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. PIPELINE TRIAGE -->
+<div class="slide" id="slide-7">
+  <div class="slide-meta"><span class="stag blue">Session 1</span> Pipeline</div>
+  <h2>Every opportunity gets a lane</h2>
+  <div class="subtitle">Triage within 24 hours of any new lead. Reviewed every Monday. No client sits in TBD for more than a week.</div>
+  <table class="dt">
+    <thead><tr><th style="width:120px;">Client</th><th style="width:75px;">Lane</th><th>Why</th><th>Recommended move</th></tr></thead>
+    <tbody>
+      <tr><td>Pioneer Credit</td><td><span class="lb lb-p">Platform</span></td><td>Regulated enterprise proof point</td><td>Platform pod focused here. $22K → $80K MRR ramp is the anchor milestone. Extract reusable template assets.</td></tr>
+      <tr><td>Caring Group</td><td><span class="lb lb-p">Platform</span></td><td>$5K → $30K expansion in model</td><td>Template-building customer. Expansion from Mth 9 built into model — confirm trigger.</td></tr>
+      <tr><td>Standard8</td><td><span class="lb lb-p">Platform</span></td><td>$20K setup Mth 5, $10K recurring</td><td>Already generating revenue. Confirm expansion path.</td></tr>
+      <tr><td>Lumi</td><td><span class="lb lb-p">Platform</span></td><td>$15K/mo from Mth 8</td><td>Confirm go-live timeline and relationship owner.</td></tr>
+      <tr><td>Tony Bulmer</td><td><span class="lb lb-p">Platform</span></td><td>$5K → $10K step-up from Mth 8</td><td>Confirm what triggers the MRR step-up.</td></tr>
+      <tr><td>Altus</td><td><span class="lb lb-p">Platform</span> + <span class="lb lb-e" style="margin-left:4px;">Lite</span></td><td>Express inbox entry, Platform expansion</td><td>Inbox clone as Express first. Broader workflow as Platform follow-on.</td></tr>
+      <tr><td>Complete Credit</td><td><span class="lb lb-p">Platform</span> + <span class="lb lb-e" style="margin-left:4px;">Lite</span></td><td>Platform lead + separate lite entry</td><td>Two separate P&L lines confirmed. Lite entry opens the door; Platform deepens.</td></tr>
+      <tr><td>Regency – lite</td><td><span class="lb lb-e">Express</span></td><td>Legacy order-entry, labour replacement</td><td>Desktop bridge for Ostendo only. Isolated VM. Human in loop for high-risk actions.</td></tr>
+      <tr><td>Machines4U</td><td><span class="lb lb-e">Express</span></td><td>$15K entry, step-down needs explaining</td><td>Confirm what drives the Mth 7 step-down to $5K and the Mth 10 step back up.</td></tr>
+      <tr><td>Lumawell – lite</td><td><span class="lb lb-e">Express</span></td><td>$10K entry, $2.5K recurring</td><td>Confirm step-down is intentional, not a modelling artefact.</td></tr>
+      <tr><td>Lite placeholder</td><td><span class="lb lb-e">Express</span></td><td>$20K/mo from Mth 8</td><td>$100K of Year 1 revenue needs a real client name before the board sees this model.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 8. P&L SLIDE -->
+<div class="slide" id="slide-8">
+  <div class="slide-meta"><span class="stag blue">Session 1</span> Financial reality</div>
+  <h2>Revenue roadmap + runway</h2>
+  <div class="subtitle">Nov 2025 – Oct 2026 (12-month forecast, not a full trading year) · Platform $839K (73%) · Express $310K (27%) · Total $1.149M · Breakeven ~Month 10</div>
+  <div class="cols c3" style="margin-bottom:14px; flex-shrink:0;">
+    <div class="card blue"><div class="clabel">Year 1 revenue</div><div class="cval">$1.149M</div><div class="cnote">Mth 5 – Mth 12</div></div>
+    <div class="card green"><div class="clabel">Peak MRR (Mth 10–12)</div><div class="cval">$217.5K</div><div class="cnote">Breakeven at ~Mth 10</div></div>
+    <div class="card amber"><div class="clabel">Monthly burn</div><div class="cval">~$112K</div><div class="cnote">Salaries + $25K ops</div></div>
+  </div>
+  <table class="dt" style="flex:1;">
+    <thead>
+      <tr><th style="width:130px;">Client</th><th style="width:55px;">Lane</th><th>Mth 5</th><th>Mth 6</th><th>Mth 7</th><th>Mth 8</th><th>Mth 9</th><th>Mth 10</th><th>Mth 11</th><th>Mth 12</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Pioneer Credit</td><td><span class="p-badge p-plat">Plat</span></td><td>22,000</td><td>7,000</td><td>10,000</td><td>30,000</td><td>50,000</td><td>80,000</td><td>80,000</td><td>80,000</td><td style="color:#185FA5; font-weight:500;">337,000</td></tr>
+      <tr><td>Lumi</td><td><span class="p-badge p-plat">Plat</span></td><td>—</td><td>—</td><td>—</td><td>15,000</td><td>15,000</td><td>15,000</td><td>15,000</td><td>15,000</td><td style="color:#185FA5; font-weight:500;">75,000</td></tr>
+      <tr><td>Reegan</td><td><span class="p-badge p-plat">Plat</span></td><td>—</td><td>—</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td style="color:#185FA5; font-weight:500;">30,000</td></tr>
+      <tr><td>Tony Bulmer</td><td><span class="p-badge p-plat">Plat</span></td><td>—</td><td>5,000</td><td>5,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td style="color:#185FA5; font-weight:500;">60,000</td></tr>
+      <tr><td>Caring Group</td><td><span class="p-badge p-plat">Plat</span></td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>20,000</td><td>30,000</td><td>30,000</td><td>30,000</td><td style="color:#185FA5; font-weight:500;">130,000</td></tr>
+      <tr><td>Complete Credit</td><td><span class="p-badge p-plat">Plat</span></td><td>—</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>15,000</td><td>20,000</td><td>20,000</td><td style="color:#185FA5; font-weight:500;">95,000</td></tr>
+      <tr><td>Standard8</td><td><span class="p-badge p-plat">Plat</span></td><td>20,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td>10,000</td><td style="color:#185FA5; font-weight:500;">90,000</td></tr>
+      <tr><td>Machines4U</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>15,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>15,000</td><td>10,000</td><td>10,000</td><td style="color:#3B6D11; font-weight:500;">65,000</td></tr>
+      <tr><td>Altus – lite</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>15,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td style="color:#3B6D11; font-weight:500;">45,000</td></tr>
+      <tr><td>Regency – lite</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>20,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td style="color:#3B6D11; font-weight:500;">50,000</td></tr>
+      <tr><td>Lumawell – lite</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>10,000</td><td>2,500</td><td>2,500</td><td>2,500</td><td>2,500</td><td>2,500</td><td>2,500</td><td style="color:#3B6D11; font-weight:500;">25,000</td></tr>
+      <tr><td>Lite placeholder</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>—</td><td>—</td><td>20,000</td><td>20,000</td><td>20,000</td><td>20,000</td><td>20,000</td><td style="color:#3B6D11; font-weight:500;">100,000</td></tr>
+      <tr><td>Complete Credit – lite</td><td><span class="p-badge p-lite">Lite</span></td><td>—</td><td>—</td><td>—</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td>5,000</td><td style="color:#3B6D11; font-weight:500;">25,000</td></tr>
+      <tr style="background:#f5f4f0;"><td style="font-weight:500; color:#1a1a1a;">Total income</td><td></td><td style="font-weight:500; color:#333;">47,000</td><td style="font-weight:500; color:#333;">97,000</td><td style="font-weight:500; color:#333;">62,500</td><td style="font-weight:500; color:#333;">127,500</td><td style="font-weight:500; color:#333;">162,500</td><td style="font-weight:500; color:#333;">217,500</td><td style="font-weight:500; color:#333;">217,500</td><td style="font-weight:500; color:#333;">217,500</td><td style="font-weight:500; color:#185FA5; font-size:13px;">1,149,000</td></tr>
+      <tr><td style="color:#aaa; font-size:11px;">Monthly burn</td><td></td><td style="color:#E24B4A; font-size:11px;">112K</td><td style="color:#aaa; font-size:11px;">112K</td><td style="color:#E24B4A; font-size:11px;">112K</td><td style="color:#aaa; font-size:11px;">112K</td><td style="color:#aaa; font-size:11px;">112K</td><td style="color:#3B6D11; font-size:11px;">112K</td><td style="color:#3B6D11; font-size:11px;">112K</td><td style="color:#3B6D11; font-size:11px;">112K</td><td></td></tr>
+    </tbody>
+  </table>
+  <div style="font-size:11px; color:#bbb; margin-top:8px; flex-shrink:0;">Assumptions: platform hosting $10K/mo · rent $5K/mo · other $10K/mo · salaries per team slide. Red burn = revenue below burn. Green = revenue above burn.</div>
+</div>
+
+<!-- 9. ARCHITECTURE + ISOLATION -->
+<div class="slide" id="slide-9">
+  <div class="slide-meta"><span class="stag amber">Session 3</span> Architecture</div>
+  <h2>The control plane + the isolation question</h2>
+  <div class="subtitle">The control plane is WorkClone's system of record — the layer we own that makes our clones portable, auditable, and proprietary regardless of which third-party tools sit beneath it.</div>
+  <div class="cols c2" style="flex:1; align-items:start;">
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:8px;">What is the control plane?</div>
+      <div class="card blue" style="margin-bottom:12px;">
+        <div style="font-size:13px; font-weight:500; color:#185FA5; margin-bottom:8px;">Think of it like this</div>
+        <div style="font-size:12px; color:#666; line-height:1.7;">Your phone stores your contacts, messages, and photos — regardless of which app you use to send a message. The control plane is WorkClone's equivalent: the layer that stores everything important about a clone, so that if we swap ElevenLabs for a different voice provider tomorrow, the clone's memory, personality, and history all stay with us — not with the vendor.</div>
+      </div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:8px;">What lives in the control plane</div>
+      <ul class="il">
+        <li><span class="d" style="background:#85B7EB;"></span>Clone identity, personality, and voice configuration</li>
+        <li><span class="d" style="background:#85B7EB;"></span>Full conversation history and memory</li>
+        <li><span class="d" style="background:#85B7EB;"></span>Prompt versions and knowledge base documents</li>
+        <li><span class="d" style="background:#85B7EB;"></span>Compliance guardrails and escalation rules</li>
+        <li><span class="d" style="background:#85B7EB;"></span>Audit trail — every action, every interaction</li>
+        <li><span class="d" style="background:#85B7EB;"></span>Client data, securely isolated per tenant</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#BA7517; margin-bottom:8px;">The isolation question — major commercial opportunity</div>
+      <div class="card amber" style="margin-bottom:10px;">
+        <div style="font-size:13px; font-weight:500; color:#854F0B; margin-bottom:6px;">Can desktop agents run fully isolated?</div>
+        <div style="font-size:12px; color:#777; line-height:1.6;">Can OpenClaw / Claude computer-use agents operate in a sandboxed environment where client data never touches the open internet? If yes, this is a trust differentiator that most competitors cannot offer.</div>
+      </div>
+      <ul class="il" style="margin-bottom:12px;">
+        <li><span class="d" style="background:#BA7517;"></span><span><strong>VM-per-client.</strong> Each desktop agent runs in a dedicated virtual machine. No shared state between clients.</span></li>
+        <li><span class="d" style="background:#BA7517;"></span><span><strong>No outbound internet.</strong> LLM calls route through WorkClone's own proxy. Nothing leaves to the open web.</span></li>
+        <li><span class="d" style="background:#BA7517;"></span><span><strong>Full audit trail.</strong> Every click, every field entry, every document read — logged before the agent acts.</span></li>
+        <li><span class="d" style="background:#BA7517;"></span><span><strong>Human in the loop.</strong> High-risk actions flagged for approval before execution, not after.</span></li>
+      </ul>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:8px;">Questions parked for Oli (within 1 week)</div>
+      <ul class="ql">
+        <li><div class="qn">Arch</div><strong>Does the control plane / execution layer split align with the platform build?</strong></li>
+        <li><div class="qn">Isolation</div><strong>Is VM-per-client desktop isolation technically feasible near-term?</strong></li>
+        <li><div class="qn">UAT</div><strong>Is an automated UAT harness feasible that serves both lanes?</strong></li>
+        <li><div class="qn">Visibility</div><strong>What's the lightest-weight way to give the team platform state visibility?</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 10. 90-DAY ROADMAP -->
+<div class="slide" id="slide-10">
+  <div class="slide-meta"><span class="stag teal">Session 4</span> Delivery plan</div>
+  <h2>90-day roadmap</h2>
+  <div class="subtitle">Three phases, each with a revenue gate. No phase advances without the previous one landing. Platform build runs in parallel throughout.</div>
+  <div class="tl-item">
+    <div class="tl-period" style="color:#BA7517;">Weeks 0–2<br>Apr–May 26</div>
+    <div class="tl-dot amber"></div>
+    <div class="tl-content">
+      <h3>Decide the offer, ship the shell</h3>
+      <p>Freeze naming. Lane-triage all pipeline. Choose first 3 Express packs: recruitment, executive inbox, ops/order entry. Stand up portal shell: auth, orgs, clone library, setup wizard. Make hire and contract decisions. <span style="color:#BA7517;">Gate: $47K MRR Mth 5 confirmed live.</span></p>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-period" style="color:#185FA5;">Weeks 3–6<br>May–Jun 26</div>
+    <div class="tl-dot blue"></div>
+    <div class="tl-content">
+      <h3>Connect the execution layer</h3>
+      <p>Wire ElevenLabs for voice-agent creation, phone config, post-call webhooks. Wire n8n for CRM sync, digests, approval flows. Stand up canonical data model: docs, prompts, transcripts, audit events. Two internal pilots end-to-end. <span style="color:#185FA5;">Gate: no external client commitments until pilots pass UAT.</span></p>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-period" style="color:#3B6D11;">Weeks 7–12<br>Jun–Oct 26</div>
+    <div class="tl-dot green"></div>
+    <div class="tl-content">
+      <h3>Launch customers, prove the lane</h3>
+      <p>Go live: Altus inbox clone, one recruitment clone, Regency ops clone. Capture time-to-go-live, 30-day ROI, renewal intent. Feed reusable prompts and connectors back into platform. <span style="color:#3B6D11;">Gate: $127K+ MRR by Mth 8. Pioneer Credit → $80K MRR milestone.</span></p>
+    </div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-period" style="color:#0F6E56;">Weekly<br>Ongoing</div>
+    <div class="tl-dot teal"></div>
+    <div class="tl-content">
+      <h3>Operating cadence</h3>
+      <p><strong style="color:#333;">Mon 30 min</strong> — opportunity triage: Express, Platform, or Not Now. <strong style="color:#333;">Wed 45 min</strong> — Express pod build review: go-live blockers only. <strong style="color:#333;">Fri 30 min</strong> — template review: what gets promoted into the shared library.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 11. RISK GUARDRAILS -->
+<div class="slide" id="slide-11">
+  <div class="slide-meta"><span class="stag teal">Session 4</span> Guardrails</div>
+  <h2>What we're watching for</h2>
+  <div class="subtitle">Five risks that could undermine the two-speed model. Each has a confirmed guardrail — not a discussion item.</div>
+  <table class="dt" style="flex:1;">
+    <thead><tr><th>Risk</th><th>What can go wrong</th><th>Guardrail</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#E24B4A;">Desktop sprawl</td><td>Desktop automation becomes the default architecture — brittle, client-specific, hard to audit</td><td>Legacy-bridge pattern only, isolated VM per client, explicit approval for every desktop clone</td></tr>
+      <tr><td style="color:#E24B4A;">Commoditisation</td><td>Cheap lite offer collapses into replaceable services</td><td>$5K MRR floor, curated templates only, mid-market targets with clear expansion potential</td></tr>
+      <tr><td style="color:#E24B4A;">Org drag</td><td>Speed pressure and architecture pressure create friction — platform pod pulled into Express delivery</td><td>Separate pods, distinct KPIs, Oli consulted only for reusable platform decisions</td></tr>
+      <tr><td style="color:#E24B4A;">Vendor lock-in</td><td>WorkClone's memory and prompts end up inside ElevenLabs or n8n</td><td>Control plane stays in WorkClone's own data layer — always. Providers handle execution only.</td></tr>
+      <tr><td style="color:#E24B4A;">Self-serve too early</td><td>Open builder adds complexity before templates are ready</td><td>Launch operator-assisted first — clients select and supervise, they do not freely build</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 12. CLOSE -->
+<div class="slide" id="slide-12">
+  <div class="slide-meta"><span class="stag purple">Close</span></div>
+  <h2>What we leave here with</h2>
+  <div class="subtitle">Robert reads back every decision. Owner and date on every action. Clear on what's agreed vs what's parked for Oli.</div>
+  <div class="cols c2" style="flex:1; gap:18px;">
+    <div>
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#aaa; margin-bottom:10px;">Decisions to confirm out loud</div>
+      <ul class="il">
+        <li><span class="d" style="background:#AFA9EC;"></span>Lane triage for every open opportunity — owner assigned</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>AI-native builder role scoped and hiring process started</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>Developer hire — Platform or Express portal? Hire or contractor?</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>First three Express packs confirmed</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>Portal build start date and resource confirmed</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>Team visibility tool chosen and owner set</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>Oli brief — format, scope, and deadline</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>Doc Klotz briefing — before or after Oli review?</li>
+        <li><span class="d" style="background:#AFA9EC;"></span>CEO memo to team — content and timing</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card purple" style="margin-bottom:10px;">
+        <div class="clabel">Within 48 hours</div>
+        <ul class="il">
+          <li><span class="d" style="background:#AFA9EC;"></span>Robert sends decision summary to all</li>
+          <li><span class="d" style="background:#AFA9EC;"></span>Nat sends Oli brief — architecture questions + visibility ask</li>
+          <li><span class="d" style="background:#AFA9EC;"></span>Hiring process starts for AI-native builder</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <div class="clabel">Within 1 week</div>
+        <ul class="il">
+          <li><span class="d" style="background:#5DCAA5;"></span>Oli + Nat architecture session (Robert to schedule)</li>
+          <li><span class="d" style="background:#5DCAA5;"></span>Portal shell work begins</li>
+          <li><span class="d" style="background:#5DCAA5;"></span>Team visibility tool set up and shared</li>
+          <li><span class="d" style="background:#5DCAA5;"></span>Doc Klotz briefed</li>
+          <li><span class="d" style="background:#5DCAA5;"></span>First Monday triage cadence kicks off</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- NAV removed from bottom -->
+
+<script>
+  let cur = 1, total = 14;
+  const dotsEl = document.getElementById('dots');
+  for (let i = 1; i <= total; i++) {
+    const d = document.createElement('span');
+    if (i === 1) d.classList.add('active');
+    d.dataset.n = i;
+    const sid = i <= 6 ? 'slide-' + i : i === 7 ? 'slide-6b' : i === 8 ? 'slide-6c' : 'slide-' + (i - 2);
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+  const slideIds = ['slide-1','slide-2','slide-3','slide-4','slide-5','slide-6','slide-6b','slide-6c','slide-7','slide-8','slide-9','slide-10','slide-11','slide-12'];
+  function goTo(n) {
+    document.getElementById(slideIds[cur-1]).classList.remove('active');
+    dotsEl.children[cur-1].classList.remove('active');
+    cur = n;
+    document.getElementById(slideIds[cur-1]).classList.add('active');
+    dotsEl.children[cur-1].classList.add('active');
+    document.getElementById('prog').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+  }
+  function go(d) { if (cur+d >= 1 && cur+d <= total) goTo(cur+d); }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+
+  const rows = [
+    ['Go-live timeline', '10–14 days', '4–10 weeks'],
+    ['Pricing', '$5K–$12K MRR', '$15K–$100K+ MRR'],
+    ['Setup fee', '✗ None', '✓ Setup contribution'],
+    ['Infrastructure', 'Isolated, Express-specific', 'WorkClone multi-tenant platform'],
+    ['WorkClone IP + frameworks', '✓ Yes', '✓ Yes'],
+    ['Client data isolation', '✓ Per deployment', '✓ Enterprise-grade multi-tenancy'],
+    ['Full audit trail', '✗ Not in v1', '✓ Full audit log'],
+    ['Compliance guardrails', '✗ Basic only', '✓ Full regulatory compliance layer'],
+    ['Custom integrations (CRM, ERP)', '✗ No', '✓ Yes'],
+    ['Voice clone', '✓ Yes', '✓ Yes'],
+    ['Email / inbox clone', '✓ Yes', '✓ Yes'],
+    ['Agent-only / desktop automation', '✓ Supported (legacy bridge)', '✓ Supported (isolated VM)'],
+    ['Human-in-the-loop approvals', '✓ Basic', '✓ Full workflow'],
+    ['Conversation memory', '✓ Session-level', '✓ Persistent cross-session'],
+    ['Prompt versioning', '✗ No', '✓ Yes'],
+    ['Expansion to Platform', '✓ Designed to convert', '— Already here'],
+    ['Delivered by', 'Express pod (AI-native builder)', 'Platform pod (Oli + Pete)'],
+  ];
+  const tbody = document.getElementById('compare-tbody');
+  rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    const bg = i % 2 === 0 ? '#fafaf8' : '#fff';
+    tr.innerHTML = `<td style="padding:7px 12px 7px 0; color:#555; border-bottom:0.5px solid #f0ede8;">${r[0]}</td>
+      <td style="padding:7px 16px; text-align:center; background:${bg}; border-bottom:0.5px solid #f0ede8; color:${r[1].startsWith('✓') ? '#3B6D11' : r[1].startsWith('✗') ? '#E24B4A' : '#555'};">${r[1]}</td>
+      <td style="padding:7px 16px; text-align:center; background:${bg}; border-bottom:0.5px solid #f0ede8; color:${r[2].startsWith('✓') ? '#3B6D11' : r[2].startsWith('✗') ? '#E24B4A' : '#555'};">${r[2]}</td>`;
+    tbody.appendChild(tr);
+  });
+</script>
+</body>
+</html>
